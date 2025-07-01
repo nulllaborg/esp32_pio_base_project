@@ -1,0 +1,44 @@
+name: Build
+
+on:
+  push:
+    branches: ["main", "v*"]
+  pull_request:
+    branches: ["main", "v*"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: ["esp32", "esp32s3"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+
+      - name: Install Packages
+        run: pio pkg install -e ${{ matrix.environment }}
+
+      - name: Build PlatformIO Project
+        env:
+          MERGED_BIN_PATH: "${{ github.workspace }}/${{ github.event.repository.name }}.${{ matrix.environment }}.${{ github.ref_name }}.merged.bin"
+        run: |
+          echo "MERGED_BIN_PATH: ${MERGED_BIN_PATH}"
+          echo "MERGED_BIN_PATH=${MERGED_BIN_PATH}" >> $GITHUB_ENV
+          pio run -e ${{ matrix.environment }}
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact_${{ matrix.environment }}
+          path: ${{ env.MERGED_BIN_PATH }}
