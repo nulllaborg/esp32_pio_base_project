@@ -7,6 +7,6 @@ void setup() {
 }
 
 void loop() {
-  CLOGI();
+  CLOGI("test");
   delay(500);
 }
