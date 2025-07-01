@@ -28,7 +28,7 @@ def merge_bin(source, target, env):
         ]
         + images
     )
-    env.Execute(cmd)
+    return env.Execute(cmd)
 
 
 env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", merge_bin)

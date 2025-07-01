@@ -27,12 +27,20 @@ jobs:
       - name: Install Packages
         run: pio pkg install -e ${{ matrix.environment }}
 
-      - name: Build PlatformIO Project
-        env:
-          MERGED_BIN_PATH: "${{ github.workspace }}/${{ github.event.repository.name }}.${{ matrix.environment }}.${{ github.ref_name }}.merged.bin"
+      - name: Generate Merged Bin Path
         run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            MERGED_BIN_PATH="${{ github.workspace }}/${{ github.event.repository.name }}.${{ matrix.environment }}.${{ github.run_number }}.merged.bin"
+          else
+            MERGED_BIN_PATH="${{ github.workspace }}/${{ github.event.repository.name }}.${{ matrix.environment }}.${{ github.ref_name }}.merged.bin"
+          fi
           echo "MERGED_BIN_PATH: ${MERGED_BIN_PATH}"
           echo "MERGED_BIN_PATH=${MERGED_BIN_PATH}" >> $GITHUB_ENV
+
+      - name: Build PlatformIO Project
+        env:
+          MERGED_BIN_PATH: ${{ env.MERGED_BIN_PATH }}
+        run: |
           pio run -e ${{ matrix.environment }}
 
       - name: Upload Build Artifact
